@@ -22,4 +22,9 @@ c="${a} ${b}" # format printing
 var_path=$HOME
 echo $var_path
 
+echo $HOSTNAME
 
+cd $HOME
+$pwd
+echo "Writing to file" > text.txt
+cat $HOME/text.txt
