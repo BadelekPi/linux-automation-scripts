@@ -1,0 +1,9 @@
+#!/bin/bash x
+
+echo -n "Hello"
+
+echo -n "No"\n
+
+echo -e "one\ttwo"
+
+
