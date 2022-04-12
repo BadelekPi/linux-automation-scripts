@@ -7,49 +7,68 @@
 # l1=$(grep "^UID_MAX" $_l)
 # awk -F':' -v "min=${l##UID_MIN}" -v "max=${l1##UID_MAX}" '{ if ( $3 >= min && $3 <= max  && $7 != "/sbin/nologin" ) print $0 }' "$_p"
 
-# Functions
+filename="pcinfo"
+touch $filename.txt
+> $filename.txt
 
+
+# Functions
 function cpu_model { echo $(grep 'model name' /proc/cpuinfo | uniq) | cut -d" " -f4-; }
 function mem_free { echo "$(awk '/MemFree/ { printf "%.1f \n", $2/1024/1024 }' /proc/meminfo)"; }
 function mem_total { echo "$(awk '/MemTotal/ { printf "%.1f \n", $2/1024/1024 }' /proc/meminfo)"; }
-function disk_space { echo "$(df -h -t ext4)"; }
+function disk_space () { 
+                        echo -e "Total disk space" >> ""$1".txt"
+                        echo -e "$(df -h -t ext4 | awk '{ print $2 }' | awk 'FNR==2')" >> ""$1".txt"
+                        echo -e "Used disk space" >> ""$1".txt"
+                        echo -e "$(df -h -t ext4 | awk '{ print $3 }' | awk 'FNR==2')" >> ""$1".txt"
+                        echo -e "Available disk space" >> ""$1".txt"
+                        echo -e "$(df -h -t ext4 | awk '{ print $4 }' | awk 'FNR==2')" >> ""$1".txt"
+                        echo -e "Used disk space in prc" >> ""$1".txt"
+                        echo -e "$(df -h -t ext4 | awk '{ print $5 }' | awk 'FNR==2')" >> ""$1".txt"; }
+function linux_ver () {
+                        echo -e "Operating system" >> ""$1".txt"
+                        echo -e "$(hostnamectl | awk 'FNR == 6 { print $3" "$4}')" >> ""$1".txt"
+                        echo -e "Kernel version" >> ""$1".txt"
+                        echo -e "$(hostnamectl | awk 'FNR == 7 { print $2" "$3}')" >> ""$1".txt"; }
 
 if $(sudo -l &> /dev/null); then
     
-    touch pcinfo.txt
-
     # Sudo permission display
     # echo -en "$(sudo -l -U "$(whoami)")" | awk 'FNR == 4 || FNR == 5 {print}'
 
     # Manufacturer and product name
     # sudo dmidecode | grep -A3 'System Information'
 
-    # Linux and kernel version
-    # echo -en "$(hostnamectl)" | awk 'FNR == 6 || FNR == 7 {print}'
-
     # Check GPU
-    echo -e "GPU controller"  > pcinfo.txt
-    echo -e "$(sudo lshw -C display)" | awk 'FNR == 2 || FNR == 3 {print}' | cut -d" " -f4- >> pcinfo.txt
-    # echo $("lspci | grep ' VGA ' | cut -d" " -f 1 | xargs -i lspci -v -s {}") | awk 'FNR == 0' || 'FNR == 1 {print}
+    # echo -e "GPU_controller"  > $filename.txt
+    echo -e "GPU_controller,$(sudo lshw -C display)" | awk 'FNR == 2' | cut -d" " -f9- >> $filename.txt
+    # echo -e "GPU_product"  >> $filename.txt
+    echo -e "GPU_product,$(sudo lshw -C display)" | awk 'FNR == 3' | cut -d" " -f9- >> $filename.txt
 
     # Check CPU
-    echo -e "CPU" >> pcinfo.txt
-    echo -e $("cpu_model") >> pcinfo.txt
+    echo -e "CPU" >> $filename.txt
+    echo -e $("cpu_model") >> $filename.txt
      
     # Check all RAM mem
-    echo -e "Total RAM Mem" >> pcinfo.txt
-    echo -e $("mem_total") >> pcinfo.txt
+    echo -e "Total RAM Mem" >> $filename.txt
+    echo -e $("mem_total") >> $filename.txt
 
     # Check available RAM mem
-    echo -e "Available RAM Mem" >> pcinfo.txt
-    echo -e $("mem_free") >> pcinfo.txt
+    echo -e "Available RAM Mem" >> $filename.txt
+    echo -e $("mem_free") >> $filename.txt
 
     # Check disk space
-    echo -e "Disk space" >> pcinfo.txt
-    echo -e $("disk_space") >> pcinfo.txt
+    disk_space "$filename"
     
+    # Kernel version
+    linux_ver "$filename"
+
 else
 
     echo "You dont have sudo"
 fi
 
+keys=`echo -e "$(sed -n 1~2p pcinfo.txt)"`
+values=`echo -e "$(sed -n 2~2p pcinfo.txt)"`
+
+paste <(printf %s "$keys") <(printf %s "$values")
