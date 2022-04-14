@@ -17,13 +17,13 @@ function cpu_model { echo $(grep 'model name' /proc/cpuinfo | uniq) | cut -d" " 
 function mem_free { echo "$(awk '/MemFree/ { printf "%.1f \n", $2/1024/1024 }' /proc/meminfo)"; }
 function mem_total { echo "$(awk '/MemTotal/ { printf "%.1f \n", $2/1024/1024 }' /proc/meminfo)"; }
 function disk_space () { 
-                        echo -e "Total disk space" >> ""$1".txt"
+                        echo -e "Total Disk space" >> ""$1".txt"
                         echo -e "$(df -h -t ext4 | awk '{ print $2 }' | awk 'FNR==2')" >> ""$1".txt"
                         echo -e "Used disk space" >> ""$1".txt"
                         echo -e "$(df -h -t ext4 | awk '{ print $3 }' | awk 'FNR==2')" >> ""$1".txt"
-                        echo -e "Available disk space" >> ""$1".txt"
+                        echo -e "Avail disk space" >> ""$1".txt"
                         echo -e "$(df -h -t ext4 | awk '{ print $4 }' | awk 'FNR==2')" >> ""$1".txt"
-                        echo -e "Used disk space in prc" >> ""$1".txt"
+                        echo -e "Used disk space %" >> ""$1".txt"
                         echo -e "$(df -h -t ext4 | awk '{ print $5 }' | awk 'FNR==2')" >> ""$1".txt"; }
 function linux_ver () {
                         echo -e "Operating system" >> ""$1".txt"
@@ -40,9 +40,9 @@ if $(sudo -l &> /dev/null); then
     # sudo dmidecode | grep -A3 'System Information'
 
     # Check GPU
-    # echo -e "GPU_controller"  > $filename.txt
+    echo -e "GPU_controller"  > $filename.txt
     echo -e "GPU_controller,$(sudo lshw -C display)" | awk 'FNR == 2' | cut -d" " -f9- >> $filename.txt
-    # echo -e "GPU_product"  >> $filename.txt
+    echo -e "GPU_product"  >> $filename.txt
     echo -e "GPU_product,$(sudo lshw -C display)" | awk 'FNR == 3' | cut -d" " -f9- >> $filename.txt
 
     # Check CPU
@@ -68,7 +68,12 @@ else
     echo "You dont have sudo"
 fi
 
-keys=`echo -e "$(sed -n 1~2p pcinfo.txt)"`
-values=`echo -e "$(sed -n 2~2p pcinfo.txt)"`
 
-paste <(printf %s "$keys") <(printf %s "$values")
+readarray -t keys < <(sed -n 1~2p pcinfo.txt)
+readarray -t values < <(sed -n 2~2p pcinfo.txt)
+
+for i in "${!keys[@]}" ; do
+    echo -e "${keys[$i]}\t=\t${values[$i]}"
+done | column -s$'\t' -t
+
+
