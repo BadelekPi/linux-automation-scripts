@@ -37,6 +37,8 @@ if $(sudo -l &> /dev/null); then
     # sudo dmidecode | grep -A3 'System Information'
 
     # Check GPU
+    echo -e "=============== PC Stat ===============" >> $myfile
+    echo -e "" >> $myfile
     echo -e "GPU_controller"  >> $myfile
     echo -e "GPU_controller,$(sudo lshw -C display)" | awk 'FNR == 2' | cut -d" " -f9- >> $myfile
     echo -e "GPU_product"  >> $myfile
@@ -65,7 +67,24 @@ else
     echo "You dont have sudo"
 fi
 
+readarray -t keys < <(sed -n 1~2p $myfile)
+readarray -t values < <(sed -n 2~2p $myfile)
 
+for i in "${!keys[@]}" ; do
+    echo -e "${keys[$i]}\t=\t${values[$i]}"
+done | column -s$'\t' -t
+
+> $myfile
+
+echo -e "=============== Net Stat ==============" >> $myfile
+    echo -e "" >> $myfile
+echo -e "IP Address" >> $myfile
+ip_address=$(ifconfig | grep "broadcast" | cut -d " " -f 10 | cut -d "." -f 1,2,3,4 | uniq)
+echo -e $ip_address >> $myfile
+echo -e "Ping time" >> $myfile
+echo -e "$(sudo ping -c 1 $ip_address | grep "64 bytes" | cut -d "" -f 4 | tr -d ":" | cut -d " " -f 7 | cut -d "=" -f 2) ms" >> $myfile
+
+# echo -e ""
 readarray -t keys < <(sed -n 1~2p $myfile)
 readarray -t values < <(sed -n 2~2p $myfile)
 
