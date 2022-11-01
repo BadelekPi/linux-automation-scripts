@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 << 'MULTILINE-COMMENT'
-	2022.10 Maintainer: Badelek Piotr
+	2022.10 Maintainer: Badełek Piotr
 	Script for creating automatic, daily backups of home directory
 	To set a script to run automatically, extend /etc/crontab by:
 	00 03 * * 1-6 root full-path-to-current-script
