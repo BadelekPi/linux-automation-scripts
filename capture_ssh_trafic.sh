@@ -41,6 +41,7 @@ while read line
 do
 	if [[ $line==*open* ]] && [[ $line==*ssh* ]]
 	then
+		# TODO: capture ssh trafic
 		sudo tcpdump -i $interface >> results
 		exit 1
 	else
